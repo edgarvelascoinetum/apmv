@@ -1,0 +1,1365 @@
+# PLANTILLA DE DEFINICIÓN DE APIs.                                                                                                                                                            #
+# VERSIÓN: 2                                                                                                                                                                                  #
+# FECHA: 23/07/2021                                                                                                                                                                           #
+# AUTOR: Gobierno API MD                                                                                                                                                                      #
+# REVISIONES:                                                                                                                                                                                 #
+# - 23/07/2021. Creación de la plantilla a partir de la versión 1 (Paso de OpenAPI 2 a OpenAPI 3) (e_jdg125).                                                                                 #
+# - 22/12/2021. Inclusión de nuevos ejemplos relacionados con ficheros (e_jdg125):                                                                                                            #
+#     - El endpoint PUT /expedientes/{id_expediente}, de subida de un fichero.                                                                                                                #
+#     - El endpoint GET /expedientes/{id_expediente}, que devuelve un fichero.                                                                                                                #
+# - 28/01/2022: Modificación de los parámetros id_cliente e id_expediente. Ahora son uuid_cliente y uuid_expediente, y ejemplifican el uso de UUIDs como identificador de recurso (e_jdg125). #
+# - 11/04/2022: Modificación del parámetro stack_trace de standard_response_result. Es un array de objetos con diferentes propiedades, no un string (e_jdg125).                               #
+# - 11/04/2022: Modificación del parámetro stack_trace de standard_response_result. Los nombres de sus propiedades se definen con snake_case en lugar de camelCase (e_jdg125).                #
+# - 13/06/2022: Modificación de la respuesta del recurso /status. Se actualiza la información devuelta de acuerdo a las modificaciones realizadas en JAPI (e_jdg125).                         #
+# - 26/04/2023: Pequeños cambios en la ficha para que todos los ejemplos coincidan con sus modelos (e_mcp419):                                                                                #
+#     - Los campos 'uuid' de los modelos 'cliente' y 'expediente' ahora están correctamente tipados como string.                                                                              #
+#     - Modificación del modelo 'cliente' para que la propiedad 'fecha_hora_alta' tenga el formato correcto date-time.                                                                        #
+#     - Modificación de las respuestas de éxito del recurso de expedientes para que la propiedad 'num_paginas' se refleje como un entero.                                                     #
+#     - Modificación del ejemplo de respuesta de éxito del endpoint de monitorización para que las propiedades 'status' de los sistemas se muestren como booleanos.                           #
+# - 12/07/2023: Modificado el objeto links de la propiedad standard_paging para que las propiedades previous y next no sean requeridas (e_mcp419).                                            #
+# - 15/03/2024: Añadidas anotaciones específicas en los 'allOf' para que no se creen directamente modelos en dicho array. (e_mcp419)                                                          #
+# - 15/03/2024: Añadido un ejemplo de definición de scopes a los endpoints POST /clientes y GET /clientes. (e_mcp419)                                                                         #
+###############################################################################################################################################################################################
+#
+################################################################################
+#                                                                              #
+#                         --RECOMENDACIONES TÉCNICAS--                         #
+#                                                                              #
+#   * No usar líneas en blanco en la definición para facilitar la validación   #
+#     automatizada de la misma. Usar # al principio de la línea para dejarla   #
+#     comentada si se desea incluir líneas en blanco.                          #
+#                                                                              #
+#   * Guardar el archivo con la definición codificado en UTF-8 para evitar     #
+#     errores de codificación al subirlo a SVN. Consultar la documentación     #
+#     de la herramienta que estemos usando para editar el archivo. Se debe     #
+#     configurar adecuadamente el entorno para que la codificación por de-     #
+#     fecto sea UTF-8.                                                         #
+#                                                                              #
+################################################################################
+#
+################################################################################
+#                                                                              #
+#                    --NORMAS Y RECOMENDACIONES GENERALES--                    #
+#                                                                              #
+#    * Es OBLIGATORIO partir de esta plantilla para definir cualquier API      #
+#      que cumpla el estándar de definición de APIs de Madrid Digital.         #
+#                                                                              #
+#    * Los elementos que comienzan por 'standard', NO se pueden eliminar       #
+#      ni modificar.                                                           #
+#                                                                              #
+#    * Se deben incluir siempre descripciones de todo lo que sea posible:      #
+#      endpoints, recursos, subrecursos, propiedades, respuestas, etc.         #
+#      El elemento description permite enriquecer la documentación de la       #
+#      API. Se puede usar HTML o markdown para darles un formato adecuado.     #
+#                                                                              #
+#    * Reutilizar todos los elementos posibles.                                #
+#      Si un modelo se usa en varios recursos se debe definir en la sección    #
+#      correspondiente del apartado 'components' y reutilizarlo mediante       #
+#      $ref donde sea necesario. Los parámetros reutilizables se definen en    #
+#      la sección 'parameters', y las respuestas en la sección 'responses'.    #
+#      Los modelos propios u objetos a referenciar, en la sección 'schemas'.   #
+#                                                                              #
+#    * Definir ejemplos para todas las respuestas, parámetros y propiedades.   #
+#      Los ejemplos de respuestas reutilizables se especifican en la sección   #
+#      'examples'. Los de los parámetros y las propiedades de los modelos      #
+#      pueden especificarse en la propia definción de los mismos. Es muy       #
+#      importante que coincidan con lo definido.                               #
+#      Si no se definen bien, no se mostrarán en la previsualización, lo que   # 
+#      dificultará la comprensión y consumo de la API. Tampoco se podrán       #
+#      publicar mock servers a partir de la definición.                        #
+#                                                                              #
+#    * Eliminar de la definición todos aquellos elementos que no se usen,      #
+#      a excepción de aquellos que se indica que no deben ser eliminados.      #
+#                                                                              #
+#    * Organizar los recursos mediante etiquetas (tags) [OBLIGATORIO].         #
+#      La forma recomendada de organizar los recursos es agruparlos en         #
+#      etiquetas por recurso y acciones. Para las acciones se recomienda       #
+#      dividirlas en consultas y modificación, como en esta plantilla.         #
+#      Las peticiones con método GET se agrupan como consultas y las que       #
+#      tienen métodos POST, PUT y DELETE como modificaciones.                  #
+#      Si se tuvieran más recursos se agruparían del mismo modo.               #
+#      Por ejemplo, si tuviéramos otro recurso llamado cuentas, sería:         #
+#         - cuentas (consultas)                                                #
+#         - cuentas (modificación)                                             #
+#      También es OBLIGATORIO documentar las etiquetas tal y como se ha        #
+#      expuesto previamente en la sección 'tags' de esta plantilla.            #
+#                                                                              #
+#      * Especificar los códigos de error internos particulares de la API      #
+#      en cada recurso que apliquen. Existen códigos de error de uso general   #
+#      que ya están incorporados en el arquetipo Atlas 2. Estos no es          #
+#      necesario especificarlos. Dichos códigos son los siguientes:            #
+#         - 1000: atributo con valor nulo                                      #
+#         - 1001: atributo con tamaño superior al máximo permitido             #
+#         - 1002: atributo con valor inferior al mínimo                        #
+#         - 1003: atributo con valor superior al máximo                        #
+#         - 1004: el atributo no cumple la expresión regular de validación     #
+#         - 1005: el atributo no tiene el formato de fecha sin hora requerido  #
+#         - 1006: el atributo no tiene el formato de fecha con hora requerido  #
+#         - 1007: atributo con un valor distinto a los permitidos              #
+#         - 1008: el atributo no llega a la longitud mínima                    #
+#         - 1009: el atributo supera la longitud máxima                        #
+#         - 1100: filtrado por propiedad inexistente                           #
+#         - 1101: error al validar la entidad                                  #
+#         - 1102: error de conexión con BBDD                                   #
+#         - 1103: propiedad no encontrada en búsqueda en BBDD                  #
+#         - 1104: elemento no encontrado                                       #
+#         - 1105: error al transformar la fecha                                #
+#         - 1106: mensaje de error con más parámetros de los necesarios        #
+#         - 1200: recurso no encontrado                                        #
+#         - 1201: parámetro vacío o incorrecto en el cuerpo de la petición     #
+#         - 1202: cuerpo de la petición vacío o con formato incorrecto         #
+#         - 1203: error en conversión de tipos                                 #
+#         - 1204: URL no normalizada                                           #
+#                                                                              #
+################################################################################
+openapi: "3.0.0"
+info:
+  version: v1
+  # El título de la API debe indicarse como en este ejemplo.
+  # IMPORTANTE: No se pueden incluir espacios en blanco ni caracteres especiales.
+  # Si consta de varias palabras, deben separarse por mayúsculas.
+  title: APMV - API
+  description: | 
+    ----
+    ### Descripción de la API
+    Api que permite interactuar con la adjudicación de plazas para personas con alguna discapacidad
+    ### Códigos de error de todo la API (se especifican en cada recurso):
+    |Código|Descripción Genérica|
+    | -- | -- |
+    |200|Recurso obtenido satisfactoriamente|
+    |201|Recurso creado|
+    |400|Recurso Mal Informado|
+    |401|Recurso No Autorizado|
+    |403|Recurso Prohibido|
+    |404|Recurso Página No Encontrada|
+    |429|Recurso Cuota Peticiones Excedida|
+    |500|Recurso Error del Servidor|
+    |Default|Recurso Error Desconocido|
+    ----
+  contact:
+    name: Nombre del API owner o del área responsable
+    url: http://urldesoporte.com
+    email: email.de.area.responsable@madrid.org
+servers:
+  # En este bloque debemos especificar la url del host en el que se desplegará la API (Por ejemplo: apis.comunidad.madrid)
+  # * seguida del basepath de la propia API (Por ejemplo: /ciencia-tecnologia/plantilla-api)
+  # Nunca se incluirá la versión en la url, ya que el API Manager se encarga de concatenarla
+  #
+  # Hosts en función del tipo de acceso y del entorno:
+  # Desarrollo: apis.des.comunidad.madrid
+  # Validación: apis.val.comunidad.madrid
+  # Producción:
+  #   Internet: apis.comunidad.madrid
+  #   Intranet: apisintra.comunidad.madrid
+  #
+  - url: https://apis.comunidad.madrid/apmv/
+    description: Url de la API
+# Es OBLIGATORIO documentar las etiquetas que agrupan los endpoints en esta sección.
+# IMPORTANTE: Tener en cuenta las recomendaciones sobre la organización de los recursos mediante etiquetas descritas al inicio del documento.
+tags:
+  # Consta de tres elementos: name (nombre de la etiqueta), description (descripción) y, opcionalmente, enlaces externos
+  - name: Administradores
+    description: Modulo que establece la administración de las diferentes funcionalidades de APMV
+  # Esta etiqueta es estándar, no debe eliminarse
+paths:
+  ##################################################################
+  #                                                                #
+  #                          --IMPORTANTE--                        #
+  #                                                                #
+  #     Todos los comentarios incluidos en el primer endpoint      #
+  #     (GET /clientes) sirven como referencia y deben tenerse     #
+  #     en cuenta a la hora de definir el resto de endpoints.      #
+  #                                                                #
+  ##################################################################
+
+  /gestion-plazas/solicitud/{uuid}:
+    get:
+      summary: Obtiene la información de una solicitud
+      description: | 
+        Permite buscar la informacion asociada a una solicitud.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_interesado_param'
+      responses:
+        200:
+          $ref: '#/components/responses/solicitudResponse'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+
+  /gestion-plazas/solicitud/consultar-solicitudes:
+    get:
+      summary: Obtiene la información de las solicitudes
+      description: | 
+        Permite buscar la informacion asociada a una solicitud.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          $ref: '#/components/responses/solicitudPaginableResponse'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+
+  /centros/ficha-alta/datos-personales-interesado/{uuid}:
+    get:
+      summary: Obtención de los datos personales del interesado por id
+      description: | 
+        Permite obtener la información del usuarios interesado pasándole un id.
+      tags:
+        - Gestion Asignacion de Plazas
+        
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_interesado_param'
+      responses:
+        200:
+          $ref: '#/components/responses/standard_bad_request_response'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+          
+  /centros/ficha-alta/datos-personales-interesado/uuid/{uuid}:
+    put:
+      summary: Actualizacion de los datos personales del interesado - centros
+      description: | 
+        Permite actualizar la informacion de los centros.
+      tags:
+        - Gestion Asignacion de Plazas
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_interesado_param'
+      requestBody:
+        $ref: '#/components/requestBodies/centros_body_request'
+      responses:
+        200:
+          $ref: '#/components/responses/centros_response'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+          
+  /centros/consulta-asignacion-plazas:
+    get:
+      summary: Consulta de asignacion de plazas asociadas a una persona beneficiaria
+      description: | 
+        Permite buscar la informacion de asignacion de plazas.
+      tags:
+        - Gestion Asignacion de Plazas
+        
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_interesado_param'
+      responses:
+        200:
+          $ref: '#/components/responses/plaza_response_array'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+          
+  /centros/asignacion-plazas:
+    post:
+      summary: asignación de la plaza a la persona dentro del expediente
+      description: | 
+        Permite asignar la informacion de asignacion de plazas a una persona dentro del expediente.
+      tags:
+        - Gestion Asignacion de Plazas
+      requestBody:
+        $ref: '#/components/requestBodies/plazas_body_request'
+      
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_interesado_param'
+      responses:
+        200:
+          $ref: '#/components/responses/plaza_response'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+
+components:
+  parameters:
+    #
+    ######################################################################
+    #       --- Parámetros estándar (NO ELIMINAR NI MODIFICAR) ---       #
+    ######################################################################
+    #
+
+    # Cabecera obligatoria de rastreo de petición.
+    standard_trace_id_header_param:
+      in: header
+      name: x-trace-id
+      description: |
+        Cabecera indicando el id de traceo de la petición.
+        Debe ser una cadena aleatoria basada en timestamp.
+      schema:
+        type: string
+        maxLength: 100
+      required: true
+      examples:
+        Ejemplo 1:
+          value: 12345abcde
+    #
+    uuid_interesado_param:
+      name: uuid
+      in: path
+      description: uuid del interesado a obtener
+      schema:
+       $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+          
+    #Datos del paginador      
+    page:
+      name: page
+      in: query
+      description: Número de la página a recuperar.
+      required: false
+      schema:
+        type: integer
+        example: 1
+    
+    pageSize:
+      name: pageSize
+      in: query
+      description: Cantidad de resultados por página.
+      required: false
+      schema:
+        type: integer
+        example: 10
+    ####################################################################
+    #              --- Parámetros propios de la API -----              #
+    ####################################################################
+    #                                                                  #
+    #    Aquí comienzan los parámetros particulares de la API.         #
+    #    Las definiciones de los recursos van en la sección schemas.   #
+    #    Las respuestas a devolver van en la sección responses.        #
+    #                                                                  #
+    ####################################################################
+    #
+    # Esto es un ejemplo de paso de parámetro por la query.
+    # IMPORTANTE: eliminar cuando se hayan definido los parámetros particulares de la API
+    query_param:
+      in: query
+      name: query_param
+      description: |
+        Ejemplo de query parameters particulares de cada endpoint.
+        Pueden ser de cualquier tipo: fecha, número, string, etc.
+      schema:
+        type: string
+        maxLength: 16
+        minLength: 2
+      required: false
+      examples:
+        Ejemplo:
+          value: 'abc123'
+    #
+    # Esto es un ejemplo de parámetro de cabecera HTTP. 
+    # IMPORTANTE: eliminar cuando se hayan definido los parámetros particulares de la API
+    header_param:
+      in: header
+      name: header_param
+      description: |
+        Ejemplo de cabeceras particulares de cada endpoint.
+      schema:
+        type: string
+      required: false
+      examples:
+        Ejemplo:
+          value: 'valor cabecera'
+    #
+    # parametro id del expediente que se usa en
+    # - GET /expediente/{uuid_expediente}
+    uuid_expediente_param:
+      in: path
+      name: uuid_expediente
+      description: UUID del expediente a obtener
+      schema:
+        $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+  #
+  schemas:
+    #
+    #########################################################################
+    #          --- Schemas estándar (NO ELIMINAR NI MODIFICAR) ---          #
+    #########################################################################
+    #
+    standard_response:
+      description: |
+        Respuesta estándar cuando un recurso devuelve un solo elemento
+        Debe usarse en los recursos que consultan o modifican un recurso por su identificador.
+        También debe usarse en las respuestas de error aunque no devuelvan datos del recurso.
+        En esta plantilla dichas respuestas son reutilizables y ya referencian este modelo.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/standard_response_result'
+      required:
+        - result
+    #
+    standard_response_with_metadata:
+      description: |
+        Respuesta estándar cuando un recurso devuelve una lista de elementos
+        Debe usarse en los recursos que devuelven listados paginados cumplimentando el objeto metadata.
+        En los errores se aplica la misma política que en los endpoints que devuelven un solo recurso.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/standard_response_result'
+      required:
+        - result
+    #
+    standard_response_result:
+      description: |
+        Objeto result que tienen que devolver todos los recursos, correctos o incorrectos.
+        Los campos que SIEMPRE se devolverán en este objeto son status, http_code y trace_id.
+        El uso del resto de campos está descrito brevemente en sus propias descripciones, pero debe
+        consultarse el estándar de definición de APIs de MD para más información.
+      type: object
+      properties:
+        result:
+          type: object
+          properties:
+            status:
+              type: boolean
+              description: Resultado de éxito o error de la operación
+              example: true
+            http_code:
+              type: integer
+              format: int32
+              description: Código http de la respuesta.
+              example: 200
+            info:
+              type: string
+              description: Breve mensaje indicando si la operación fue exitosa o no.
+              example: Solicitud realizada con éxito.
+           
+    #
+    # Modelo UUID para identificadores de recursos con información sensible
+    uuid_interesado:
+      description: Modelo para identificadores basados en UUID
+      type: string
+      format: uuid
+      minLength: 36
+      maxLength: 36
+      pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+      example: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+    #
+    
+    usuario:
+      type: object
+      properties:
+        primerApellido:
+          type: string
+          example: 'Perez'
+          description: 'Primer apellido del usuario'
+        segundoApellido:
+          type: string
+          example: 'Bonillo'
+          description: 'Segundo apellido del usuario'
+        nombre:
+          type: string
+          example: 'Agustin'
+          description: 'nombre del usuario'
+        dniNie:
+          type: string
+          example: '53923141G'
+          description: 'Numero de identificacion del usuario'
+        idExpediente:
+          type: string
+          example: 'ABC123456'
+          description: 'Identificador del expendiente del usuario'
+    
+    plazas:
+      type: object
+      properties:
+        idPlaza:
+          type: number
+          example: 12
+          description: 'identificador interno de la plaza'
+        tipoPlaza:
+          type: string
+          example: 'RESHOGAR'
+          description: 'tipo de plaza'
+        idTipoGestion:
+          type: string
+          example: '05'
+          description: 'identificador interno del tipo de gestion'
+        tipoGestion:
+          type: string
+          example: 'GESTION DE SERVICIO'
+          description: 'tipo de gestion de servicio'
+        plazaAdj:
+          type: number
+          example: 1
+          description: 'plaza de adjudicacion'
+        plazaIng:
+          type: number
+          example: 0
+          description: 'plaza de ingreso'
+        plazaTot:
+          type: number
+          example: 1
+          description: 'plaza total'
+        plazaDis:
+          type: number
+          example: 1
+          description: 'plaza dem disponibilidad'
+    result:
+      type: object
+      properties:
+        status:
+          type: boolean
+          description: Resultado de éxito o error de la operación
+          example: true
+        http_code:
+          type: integer
+          format: int32
+          description: Código http de la respuesta.
+          example: 200
+        info:
+          type: string
+          description: Breve mensaje indicando si la operación fue exitosa o no.
+          example: Solicitud realizada con éxito.
+    
+    # Modelo de cabecera location para operaciones POST de creación de recursos
+    location_header:
+      description: Cabecera estándar a devolver en la creación de recursos
+      type: string
+      example: '/clientes/62977d46-7a50-41c9-8d84-38272ac2a8df'
+    #
+    
+    
+    ######################################################################
+    #                 --- Schemas propios de la API -----                #
+    ######################################################################
+    #                                                                    #
+    #    Aquí empiezan los schemas particulares de la API.               #
+    #                                                                    #
+    #    Para cada recurso estará bien definir el objeto u objetos que   #
+    #    representan el recurso o las distinas formas de verlo.          #
+    #    (Ej. cliente)                                                   #
+    #                                                                    #
+    #    Los parámetros de recursos van en la sección 'parameters'.      #
+    #    Las respuestas van en la sección 'responses'.                   #
+    #                                                                    #
+    ######################################################################
+    #
+    interesado:
+      description: Modelo de recurso interesado
+      type: object
+      properties:
+        primerApellido: 
+          type: string
+          description: Primer apellido del interesado
+          example: "Perez"
+        segundoApellido: 
+          type: string
+          description: Segundo apellido del interesado
+          example: "Garcia"
+        nombre: 
+          type: string
+          description: Nombre del interesado
+          example: "Agustin"
+        dniNie: 
+          type: string
+          description: Identificador del interesado
+          example: "ABF123456"
+        fechaNacimiento: 
+          type: string
+          format: date
+          description: Fecha de nacimiento del interesado
+          example: "1992-07-09"
+        sexo: 
+          type: string
+          description: Sexo del interesado
+          example: "Masculino"
+        estadoCivil: 
+          type: string
+          description: Estado civil del interesado
+          example: "Soltero"
+        municipio: 
+          type: string
+          description: Municipio donde radica el interesado
+          example: "Madrid"
+        distritoMunicipal: 
+          type: integer
+          description: Identificador distrito del municipio del interesado
+          example: 15
+        tipoVia: 
+          type: string
+          description: Tipo via donde radica el interesado
+          example: "Calle"
+        direccion: 
+          type: string
+          description: Dirección donde radica el interesado
+          example: "Arriaga"
+        numero: 
+          type: string
+          description: Numero donde radica el interesado
+          example: "139"
+        bloque: 
+          type: string
+          description: Bloque donde radica el interesado
+          example: "2"
+        escalera: 
+          type: string
+          description: Escalera donde radica el interesado
+          example: "B"
+        piso: 
+          type: integer
+          description: Piso donde radica el interesado
+          example: 4
+        puerta: 
+          type: string
+          description: Puerta del piso donde radica el interesado
+          example: "22"
+        codigoPostal: 
+          type: string
+          description: Codigo postal donde radica el interesado
+          example: "28043"
+        telefono: 
+          type: string
+          description: Telefono donde radica el interesado
+          example: "618684923"
+
+    representante:
+      description: Modelo de recurso representante
+      type: object
+      properties:
+        primerApellido: 
+          type: string
+          description: Primer apellido del representante
+          example: "Perez"
+        segundoApellido: 
+          type: string
+          description: Segundo apellido del representante
+          example: "Lopez"
+        nombre: 
+          type: string
+          description: Nombre del representante
+          example: "Javier"
+        dniNie: 
+          type: string
+          description: Identificador del representante
+          example: "33223756M"
+        municipio: 
+          type: string
+          description: Municipio donde radica el representante
+          example: "Madrid"
+        distritoMunicipal: 
+          type: integer
+          description: Identificador distrito del municipio del representante
+          example: 15
+        tipoVia: 
+          type: string
+          description: Tipo via donde radica el representante
+          example: "Calle"
+        direccion: 
+          type: string
+          description: Dirección donde radica el representante
+          example: "Arriaga"
+        numero: 
+          type: string
+          description: Numero donde radica el representante
+          example: "139"
+        bloque: 
+          type: string
+          description: Bloque donde radica el representante
+          example: "2"
+        escalera: 
+          type: string
+          description: Escalera donde radica el representante
+          example: "B"
+        piso: 
+          type: integer
+          description: Piso donde radica el representante
+          example: 4
+        puerta: 
+          type: string
+          description: Puerta del piso donde radica el representante
+          example: "22"
+        codigoPostal: 
+          type: string
+          description: Codigo postal donde radica el representante
+          example: "28043"
+        telefono: 
+          type: string
+          description: Telefono donde radica el representante
+          example: "618684923"
+        parentesco: 
+          type: string
+          description: Parentesco con el interesado
+          example: "Padre"
+
+    centros:
+      description: centros del representante
+      type: object
+      properties:
+        centro1: 
+          type: string
+          description: nombre del centro 1
+          example: "centro 1"
+        centro2: 
+          type: string
+          description: nombre del centro 2
+          example: "centro 2"
+        centro3: 
+          type: string
+          description: nombre del centro 3
+          example: "centro 3"
+        centro4: 
+          type: string
+          description: nombre del centro 4
+          example: "cualquiera"
+        regimenAlojamiento:
+          type: string
+          enum:
+            - internado
+            - media-pension
+            - externado
+          description: Selecciona un régimen de alojamiento
+
+    listado-usuarios:
+      description: Informacion de los usuarios que coinciden con los criterios de búsqueda.
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          example: 3
+          description: 'Total de registros que se obtiene de la busqueda'
+        totalPages:
+          type: integer
+          example: 1
+          description: 'Total de paginas que se obtiene de la busqueda'
+        currentPage:
+          type: integer
+          example: 1
+          description: 'Pagina actual que se obtiene de la busqueda'
+        informacionUsuarios:
+          type: array
+          items:
+            $ref: '#/components/schemas/usuario'
+          description: 'Informacion de los usuarios'
+    
+          
+  #
+  requestBodies:
+    #
+    ######################################################################
+    #               --- Cuerpos de petición estándar ---                 #
+    ######################################################################
+    #
+    ######################################################################
+    #           --- Cuerpos de petición propios de la API ---            #
+    ######################################################################
+    #                                                                    #
+    #                             IMPORTANTE                             #
+    #    De acuerdo a la normativa, la nomenclatura de los cuerpos de    #
+    #    petición debe ser <método http><nombre recurso>_body_param      #
+    #    Ej: post_cliente_body_param                                     #
+    #                                                                    #
+    #    Borrar ejemplos una vez se hayan definido los cuerpos propios.  #
+    #                                                                    #
+    ######################################################################
+    #
+    # IMPORTANTE: Eliminar este ejemplo. Si se va a utilizar este mismo caso, cambiar el nombre
+    #             por uno descriptivo, y modificar la descripción y aquello que aplique.
+    body_param:
+      description: |
+        Parámetros sensibles de usuarios
+      content:
+        application/json:
+          schema:
+            properties:
+              primerApellido:
+                type: string
+                example: Perez
+                description: 'Primer Apellido Usuario'
+              segundoApellido:
+                type: string
+                example:
+                description: 'Segundo Apellido Usuario'
+              nombre:
+                type: string
+                example: Perez
+                description: 'Nombre del Usuario'
+              dniNie:
+                type: string
+                example: '1234455666'
+                description: 'Identificación del Usuario'
+              idExpediente:
+                type: string
+                example: 'EXP-245432345654'
+                description: 'Identificador del expediente del usuario'
+      required: true
+    centros_body_request:
+      description: 'Informacion para la actualizacion de los centros del interesado'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/centros'
+      required: true
+    plazas_body_request:
+      description: 'Informacion para asignacion de plazas a la persona dentro del expediente'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/plazas'
+      required: true
+  #
+  responses:
+    #
+    ######################################################################
+    #                                                                    #
+    #      ----------------------    NOTA:   ----------------------      #
+    #                                                                    #
+    #   Todas las respuestas deben incluir el apartado 'headers', en el  #
+    #   que se indican las cabeceras a esperar. Esto permite establecer  #
+    #   con precisión toda la información que se va a recibir y así      #
+    #   facilitar el tratamiento adecuado de la misma.                   #
+    #                                                                    #
+    ######################################################################
+    #
+    #
+    ######################################################################
+    #     ----- Respuestas estándar (NO ELIMINAR NI MODIFICAR) -----     #
+    ######################################################################
+    #
+    # Respuesta para cualquier endpoint de eliminación de recurso individual
+    standard_delete_response:
+      description: Recurso eliminado correctamente
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/standard_response'
+            properties:
+              data:
+                type: object
+                properties:
+                  uuid:
+                    type: string
+                    format: uuid
+                    description: UUID del recurso eliminado
+                    example: '497faaf6-5aab-425b-bb6d-a8e374c6ec98'
+                  id:
+                    type: integer
+                    format: int32
+                    description: Identificador del recurso eliminado
+                    example: 23
+          examples:
+            Ejemplo 1:
+              $ref: '#/components/examples/standard_delete_response_example'
+    #
+    # Respuesta para endpoints de eliminación masiva de recursos
+    standard_multi_delete_response:
+      description: Recursos borrados correctamente
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/standard_response'
+            properties:
+              data:
+                type: object
+                properties:
+                  deleted_elements:
+                    type: array
+                    items:
+                      type: string
+                    description: Array de identificadores de recursos eliminados
+                    example:
+                      - '497faaf6-5aab-425b-bb6d-a8e374c6ec98'
+                      - '5e1dd3b1-e524-43f4-beef-46b0795ebb4f'
+          examples:
+            Ejemplo 1:
+              $ref: '#/components/examples/standard_multi_delete_response_example'
+    #
+    # Respuesta para peticiones incorrectas por parte del cliente (parámetros ausentes, erróneos, etc.)
+    standard_bad_request_response:
+      description: Petición incorrecta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 400
+              info: 'Parámetros incorrectos'
+              trace_id: 123456abcde
+              errors:
+              - code: 1000
+                message: El atributo '%s' no puede contener un valor nulo
+              - code: 1005
+                message: El contenido del atributo '%s' ha de seguir el formato ISO 8601 para fechas sin hora
+    #
+    # Respuesta para peticiones en las que el backend autentica al cliente y este no tiene acceso al mismo.
+    standard_unauthorized_response:
+      description: No autorizado
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 401
+              info: 'No autorizado'
+              trace_id: 123456abcde
+    #
+    # Respuesta para peticiones en las que el backend autentica al cliente, 
+    # y este tiene acceso a la API pero no al recurso invocado.
+    standard_forbidden_response:
+      description: Recurso prohibido
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 403
+              info: 'Recurso prohibido'
+              trace_id: 123456abcde
+    #
+    # Respuesta para peticiones en las que no se ha encontrado el recurso solicitado.
+    standard_not_found_response:
+      description: No encontrado
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 404
+              info: 'Recurso no encontrado'
+              trace_id: 123456abcde
+              errors:
+              - code: 1104
+                message: 'No se ha encontrado ningún elemento con el identificador proporcionado. Por favor, revise: %s'
+    #
+    # Respuesta a devolver en caso de que el backend controle la cuota máxima de peticiones y esta se haya rebasado. 
+    # Por norma general será el API manager el que lo gestione y esta respuesta no será necesaria.
+    standard_too_many_requests_response:
+      description: Demasiadas peticiones
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 429
+              info: 'Cuota de peticiones excedida'
+              trace_id: 123456abcde
+    #
+    # Respuesta a devolver cuando se produzcan errores no controlados.
+    standard_server_error_response:
+      description: Error desconocido
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/standard_response'
+          example:
+            result:
+              status: false
+              http_code: 500
+              info: 'Error desconocido'
+              trace_id: 123456abcde
+              errors:
+              - code: 2000
+                message: Mensaje de error
+    #
+    # Respuesta estándar para el endpoint /status
+    # OBLIGATORIA en todas las APIs definidas bajo el estándar de MD.
+    standard_status_endpoint_response:
+      description: Status
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          examples:
+            Ejemplo 1:
+              $ref: '#/components/examples/standard_status_endpoint_response_example'
+    #
+    
+    ######################################################################
+    #              ----- Respuestas propias de la API -----              #
+    ######################################################################
+    #                                                                    #
+    #    Si hay respuestas que no devuelven el recurso completo sino     #
+    #    parte, se creará un definición específica para esa respuesta    #
+    #    con la nomemclatura: <método http><nombre recurso>_response     #
+    #    Ej: post_cliente_response                                       #
+    #                                                                    #
+    #    Si se diera el caso de que la respuesta se usara para varios    #
+    #    verbos, por ejemplo POST y PUT, se incluirán ambos en el        #
+    #    nombre de la misma.                                             #
+    #    Ej: post_put_cliente_response                                   #
+    #                                                                    #
+    ######################################################################
+    #
+    # Respuesta de obtención de un cliente.
+    # Se usa en todas las respuestas que devuelvan un cliente concreto
+    solicitudResponse:
+      description: Información asociada a la solicitud - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                  type: object
+                  properties:
+                    interesado:
+                      $ref: '#/components/schemas/interesado'
+                    representante:
+                      $ref: '#/components/schemas/representante'
+                    centros:
+                      $ref: '#/components/schemas/centros'
+    
+    solicitudPaginableResponse:
+      description: Información asociada a la solicitud - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    interesado:
+                      $ref: '#/components/schemas/interesado'
+                    representante:
+                      $ref: '#/components/schemas/representante'
+                    centros:
+                      $ref: '#/components/schemas/centros'
+              
+    solicitudResponseList:
+      description: Información asociada a la solicitud - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            type: object
+            # IMPORTANTE: Utilizar el 'allOf' de la siguiente manera: como un array de referencias a otros modelos de los cuales
+            #   obtener todas sus propiedades. Nunca definir directamente un modelo como elemento del array, puesto que eso puede
+            #   ocasionar problemas a la hora de resolver referencias. En caso de necesitar propiedades adicionales, añadirlas con
+            #   el 'properties' a la misma altura que el 'allOf', tal y como se realiza en todos los modelos que lo emplean.
+            properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    interesado:
+                      $ref: '#/components/schemas/interesado'
+                    representante:
+                      $ref: '#/components/schemas/representante'
+                    centros:
+                      $ref: '#/components/schemas/centros'
+  #
+    centros_response:
+      description: 'Informacion actualizada de los centros asociados al interesado'
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/standard_response_result'
+            properties:
+              centros:
+                $ref: '#/components/schemas/centros'
+                
+    plaza_response_array:
+      description: 'Informacion de las plazas'
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/standard_response_result'
+            properties:
+              plazas:
+                type: array
+                items:
+                  $ref: '#/components/schemas/plazas'
+    plaza_response:
+      description: 'Informacion de la plaza'
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/standard_response_result'
+            properties:
+              plaza:
+                  $ref: '#/components/schemas/plazas'
+
+    listado_usuarios_response:
+      description: Lista de usuarios que coinciden con los criterios de búsqueda.
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            # IMPORTANTE: Utilizar el 'allOf' de la siguiente manera: como un array de referencias a otros modelos de los cuales
+            #   obtener todas sus propiedades. Nunca definir directamente un modelo como elemento del array, puesto que eso puede
+            #   ocasionar problemas a la hora de resolver referencias. En caso de necesitar propiedades adicionales, añadirlas con
+            #   el 'properties' a la misma altura que el 'allOf', tal y como se realiza en todos los modelos que lo emplean.
+            allOf:
+              - $ref: '#/components/schemas/standard_response'
+            properties:
+              listado-usuarios:
+                $ref: '#/components/schemas/listado-usuarios'
+          examples:
+            ejemplo:
+              $ref: '#/components/examples/listado_usuarios_response_example'
+  
+  
+      
+                  
+  examples:
+    #
+    ####################################################################
+    #                   --- Ejemplos de la API ---                     #
+    ####################################################################
+    #                                                                  #
+    #    En esta sección se declaran los ejemplos propios de la API,   #
+    #    especialmente los de las respuestas, para referenciarlos.     #
+    #                                                                  #
+    #    Es un paso importante, ya que los ejemplos declarados aquí    #
+    #    servirán tanto para los desarrolladores como para la          #
+    #    generación correcta de los mock server.                       #
+    #                                                                  #
+    ####################################################################
+    #
+    #
+    standard_delete_response_example:
+      value:
+        result:
+          status: true
+          http_code: 200
+          info: 'Solicitud realizada con éxito'
+          trace_id: 123456abcde
+        data:
+          uuid: '5e1dd3b1-e524-43f4-beef-46b0795ebb4f'
+    #
+    standard_multi_delete_response_example:
+      value:
+        result:
+          status: true
+          http_code: 200
+          info: 'Solicitud realizada con éxito'
+          trace_id: 123456abcde
+        data:
+          deleted_elements: ['5e1dd3b1-e524-43f4-beef-46b0795ebb4f', '4e35b5ab-7d96-4aa8-88cf-1c6e77059766', '59909623-0b85-46e2-a5f4-ca81e81e3464']
+    #
+    standard_status_endpoint_response_example:
+      value:
+        result:
+          status: true
+          http_code: 200
+          info: Solicitud realizada con éxito
+          trace_id: 12345abcde
+        data:
+          current_date_time: "2022-05-11T13:44:33+0200"
+          app_version: "1.2.0 japi_rest_ejemplo_alumnos"
+          app_build_date_time: "2022-05-03T18:22:24+0200"
+          frw_version: "JAPI 1.2.0"
+          systems:
+            - system: "BBDD"
+              status: true
+            - system: "JWKS de WSO2"
+              status: true
+    #
+    
+    listado_usuarios_response_example:
+      value:
+        result:
+          status: true
+          http_code: 200
+          info: 'Solicitud realizada con éxito.'
+        listaUsuarios:
+          totalItems: 3
+          totalPages: 1
+          currentPage: 1
+          informacionUsuarios:
+            - primerApellido: 'Perez'
+              segundoApellido: 'Bonillo'
+              nombre: 'Agustin'
+              dniNie: '53923141G'
+              idExpediente: 'ABC123456'
+            - primerApellido: 'Perez'
+              segundoApellido: 'Garcia'
+              nombre: 'Agustin'
+              dniNie: '12345678B'
+              idExpediente: 'ABD123456'
+            - primerApellido: 'Perez'
+              segundoApellido: 'Morales'
+              nombre: 'Agustin'
+              dniNie: '12345678C'
+              idExpediente: 'ABF123456'
+    ######################################################################
+    #               ----- Ejemplos propios de la API -----               #
+    ######################################################################
+    #
+    examples:
+      value:
+        interesado:
+          primerApellido: "Perez"
+          segundoApellido: "Bonillo"
+          nombre: "Agustin"
+          dniNie: "53923141G"
+          fechaNacimiento: "1992-07-09"
+          sexo: "Masculino"
+          estadoCivil: "Soltero"
+          municipio: "Madrid"
+          distritoMunicipal: 15
+          tipoVia: "Calle"
+          direccion: "Arriaga"
+          numero: "139"
+          bloque: "2"
+          escalera: "B"
+          piso: 4
+          puerta: "22"
+          codigoPostal: "28043"
+          telefono: "618684923"
+        representante:
+          primerApellido: "Perez"
+          segundoApellido: "Lopez"
+          nombre: "Javier"
+          dniNie: "33223756M"
+          municipio: "Madrid"
+          distritoMunicipal: 15
+          tipoVia: "Calle"
+          direccion: "Arriaga"
+          numero: "139"
+          bloque: "2"
+          escalera: "B"
+          piso: 4
+          puerta: "22"
+          codigoPostal: "28043"
+          telefono: "618684923"
+          parentesco: "Padre"
+        centros:
+          centro1: "centro 1 example"
+          centro2: "centro 2 example"
+          centro3: "centro 3 example"
+          centro4: "centro 4 example"
+        regimenAlojamiento: "externado"
