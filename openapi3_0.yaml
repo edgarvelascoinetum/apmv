@@ -488,13 +488,13 @@ paths:
   
   
   
-  /centros/asignacion-plazas:
+  /gestion-plazas/plaza:
     post:
       summary: asignación de la plaza a la persona dentro del expediente
       description: | 
         Permite asignar la informacion de asignacion de plazas a una persona dentro del expediente.
       tags:
-        - Gestion Asignacion de Plazas
+        - Administradores
       requestBody:
         $ref: '#/components/requestBodies/plazas_body_request'
       
