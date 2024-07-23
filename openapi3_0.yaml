@@ -114,7 +114,7 @@
 ################################################################################
 openapi: "3.0.0"
 info:
-  version: v1
+  version: v2
   # El título de la API debe indicarse como en este ejemplo.
   # IMPORTANTE: No se pueden incluir espacios en blanco ni caracteres especiales.
   # Si consta de varias palabras, deben separarse por mayúsculas.
@@ -222,22 +222,23 @@ paths:
           $ref: '#/components/responses/standard_too_many_requests_response'
         default:
           $ref: '#/components/responses/standard_server_error_response'
-
-  /centros/ficha-alta/datos-personales-interesado/{uuid}:
+  
+  /gestion-plazas/solicitud/consultar-solicitudes/interesado/{uuid}:
     get:
-      summary: Obtención de los datos personales del interesado por id
+      summary: Obtiene la información de las solicitudes que pertenecen a un interesado
       description: | 
-        Permite obtener la información del usuarios interesado pasándole un id.
+        Permite buscar la informacion asociada a las solicitudes del interesado.
       tags:
-        - Gestion Asignacion de Plazas
-        
+        - Administradores
       parameters:
         - $ref: '#/components/parameters/standard_trace_id_header_param'
         - $ref: '#/components/parameters/header_param'
         - $ref: '#/components/parameters/uuid_interesado_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
       responses:
         200:
-          $ref: '#/components/responses/standard_bad_request_response'
+          $ref: '#/components/responses/solicitudResponseList'
         400:
           $ref: '#/components/responses/standard_bad_request_response'
         401:
@@ -249,16 +250,17 @@ paths:
         default:
           $ref: '#/components/responses/standard_server_error_response'
           
-  /centros/ficha-alta/datos-personales-interesado/uuid/{uuid}:
+  /gestion-plazas/solicitud/{uuidSolicitud}/centros/interesado/{uuid}:
     put:
       summary: Actualizacion de los datos personales del interesado - centros
       description: | 
         Permite actualizar la informacion de los centros.
       tags:
-        - Gestion Asignacion de Plazas
+        - Administradores
       parameters:
         - $ref: '#/components/parameters/standard_trace_id_header_param'
         - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_solicitud_param'
         - $ref: '#/components/parameters/uuid_interesado_param'
       requestBody:
         $ref: '#/components/requestBodies/centros_body_request'
@@ -276,21 +278,20 @@ paths:
         default:
           $ref: '#/components/responses/standard_server_error_response'
           
-  /centros/consulta-asignacion-plazas:
+  /gestion-plazas/representante/{uuidRepresentante}:
     get:
-      summary: Consulta de asignacion de plazas asociadas a una persona beneficiaria
+      summary: Obtiene la información de un representante
       description: | 
-        Permite buscar la informacion de asignacion de plazas.
+        Permite buscar la informacion asociada a un representante.
       tags:
-        - Gestion Asignacion de Plazas
-        
+        - Administradores
       parameters:
         - $ref: '#/components/parameters/standard_trace_id_header_param'
         - $ref: '#/components/parameters/header_param'
-        - $ref: '#/components/parameters/uuid_interesado_param'
+        - $ref: '#/components/parameters/uuid_representante_param'
       responses:
         200:
-          $ref: '#/components/responses/plaza_response_array'
+          $ref: '#/components/responses/representanteResponse'
         400:
           $ref: '#/components/responses/standard_bad_request_response'
         401:
@@ -302,6 +303,191 @@ paths:
         default:
           $ref: '#/components/responses/standard_server_error_response'
           
+  /gestion-plazas/representante/consultar-representantes:
+    get:
+      summary: Obtiene la información de los representantes
+      description: | 
+        Permite buscar la informacion asociada a los representantes.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          $ref: '#/components/responses/representanteResponseList'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+          
+  /gestion-plazas/centros/{uuidCentro}:
+    get:
+      summary: Obtiene la información de un centro
+      description: | 
+        Permite buscar la informacion asociada a un un centro.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_centro_param'
+      responses:
+        200:
+          $ref: '#/components/responses/centroResponse'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+  
+  /gestion-plazas/centros/consultar-centros:
+    get:
+      summary: Obtiene la información de los centros
+      description: | 
+        Permite buscar la informacion asociada a los centros.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          $ref: '#/components/responses/centrosResponseList'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+  
+  /gestion-plazas/plaza/{uuidPlaza}:
+    get:
+      summary: Obtiene la información de una plaza
+      description: | 
+        Permite buscar la informacion asociada a una plaza.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_plaza_param'
+      responses:
+        200:
+          $ref: '#/components/responses/plazaResponse'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+          
+  
+  /gestion-plazas/plaza/consultar-plazas:
+    get:
+      summary: Obtiene la información de las plazas
+      description: | 
+        Permite buscar la informacion asociada a las plazas.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          $ref: '#/components/responses/plazaResponseList'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+  
+  
+  /gestion-plazas/solicitante/{uuidSolicitante}:
+    get:
+      summary: Obtiene la información de un solicitante
+      description: | 
+        Permite buscar la informacion asociada a un solicitante.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/uuid_solicitante_param'
+      responses:
+        200:
+          $ref: '#/components/responses/solicitanteResponse'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+  
+  
+  /gestion-plazas/solicitante/consultar-solicitantes:
+    get:
+      summary: Obtiene la información de los solicitantes
+      description: | 
+        Permite buscar la informacion asociada a los solicitantes.
+      tags:
+        - Administradores
+      parameters:
+        - $ref: '#/components/parameters/standard_trace_id_header_param'
+        - $ref: '#/components/parameters/header_param'
+        - $ref: '#/components/parameters/page'
+        - $ref: '#/components/parameters/pageSize'
+      responses:
+        200:
+          $ref: '#/components/responses/solicitanteResponseList'
+        400:
+          $ref: '#/components/responses/standard_bad_request_response'
+        401:
+          $ref: '#/components/responses/standard_unauthorized_response'
+        403:
+          $ref: '#/components/responses/standard_forbidden_response'
+        429:
+          $ref: '#/components/responses/standard_too_many_requests_response'
+        default:
+          $ref: '#/components/responses/standard_server_error_response'
+  
+  
+  
+  
   /centros/asignacion-plazas:
     post:
       summary: asignación de la plaza a la persona dentro del expediente
@@ -318,7 +504,7 @@ paths:
         - $ref: '#/components/parameters/uuid_interesado_param'
       responses:
         200:
-          $ref: '#/components/responses/plaza_response'
+          $ref: '#/components/responses/plazaResponse'
         400:
           $ref: '#/components/responses/standard_bad_request_response'
         401:
@@ -363,6 +549,61 @@ components:
       examples:
         Ejemplo:
           value: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+    
+    uuid_solicitud_param:
+      name: uuidSolicitud
+      in: path
+      description: uuid de la solicitud
+      schema:
+       $ref: '#/components/schemas/uuid_solicitud'
+      required: true
+      examples:
+        Ejemplo:
+          value: '1029485859'
+    
+    uuid_representante_param:
+      name: uuidRepresentante
+      in: path
+      description: uuid del representante a obtener
+      schema:
+       $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '39984021347'
+      
+    uuid_centro_param:
+      name: uuidCentro
+      in: path
+      description: uuid del centro a obtener
+      schema:
+       $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '39984021347'
+    
+    uuid_plaza_param:
+      name: uuidPlaza
+      in: path
+      description: uuid de la plaza a obtener
+      schema:
+       $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '399'
+          
+    uuid_solicitante_param:
+      name: uuidSolicitante
+      in: path
+      description: uuid del solicitante a obtener
+      schema:
+       $ref: '#/components/schemas/uuid_interesado'
+      required: true
+      examples:
+        Ejemplo:
+          value: '399'
           
     #Datos del paginador      
     page:
@@ -500,6 +741,16 @@ components:
       maxLength: 36
       pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
       example: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+    
+    uuid_solicitud:
+      description: Modelo para identificadores basados en UUID
+      type: string
+      format: uuid
+      minLength: 36
+      maxLength: 36
+      pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+      example: '62977d46-7a50-41c9-8d84-38272ac2a8df'
+    
     #
     
     usuario:
@@ -1143,7 +1394,7 @@ components:
                       $ref: '#/components/schemas/centros'
               
     solicitudResponseList:
-      description: Información asociada a la solicitud - ficha de alta
+      description: Información asociada a la solicitud asociado al interesado
       headers:
         x-trace-id:
           schema:
@@ -1152,10 +1403,163 @@ components:
         application/json:
           schema:
             type: object
-            # IMPORTANTE: Utilizar el 'allOf' de la siguiente manera: como un array de referencias a otros modelos de los cuales
-            #   obtener todas sus propiedades. Nunca definir directamente un modelo como elemento del array, puesto que eso puede
-            #   ocasionar problemas a la hora de resolver referencias. En caso de necesitar propiedades adicionales, añadirlas con
-            #   el 'properties' a la misma altura que el 'allOf', tal y como se realiza en todos los modelos que lo emplean.
+            properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    idSolicitud:
+                      type: string
+                      example: '245432345654'
+                      description: 'Identificador de la solicitud del usuario'
+                    interesado:
+                      $ref: '#/components/schemas/interesado'
+                    representante:
+                      $ref: '#/components/schemas/representante'
+                    centros:
+                      $ref: '#/components/schemas/centros'
+                
+    representanteResponse:
+      description: Información asociada al representante - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              representante:
+                $ref: '#/components/schemas/representante'
+    
+    representanteResponseList:
+      description: Información asociada a la solicitud asociado al representante
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    representante:
+                      $ref: '#/components/schemas/representante'
+    
+    centroResponse:
+      description: Información asociada al centro - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              centros:
+                $ref: '#/components/schemas/centros'
+                
+    centrosResponseList:
+      description: Información asociada a la solicitud asociado a los centros
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    centros:
+                      $ref: '#/components/schemas/centros'
+            
+    plazaResponse:
+      description: Información asociada a la plaza - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              plazas:
+                $ref: '#/components/schemas/plazas'
+    
+    
+    plazaResponseList:
+      description: Información de la solicitud asociada a las plazas
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                $ref: '#/components/schemas/result'
+              data:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    plazas:
+                      $ref: '#/components/schemas/plazas'
+                      
+    solicitanteResponse:
+      description: Información asociada al solicitante - ficha de alta
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+           type: object
+           properties:
+              result:
+                $ref: '#/components/schemas/result'
+              interesado:
+                $ref: '#/components/schemas/interesado'
+                
+    solicitanteResponseList:
+      description: Información de la solicitud asociada a los solicitantes
+      headers:
+        x-trace-id:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            type: object
             properties:
               result:
                 $ref: '#/components/schemas/result'
@@ -1166,10 +1570,7 @@ components:
                   properties:
                     interesado:
                       $ref: '#/components/schemas/interesado'
-                    representante:
-                      $ref: '#/components/schemas/representante'
-                    centros:
-                      $ref: '#/components/schemas/centros'
+    
   #
     centros_response:
       description: 'Informacion actualizada de los centros asociados al interesado'
